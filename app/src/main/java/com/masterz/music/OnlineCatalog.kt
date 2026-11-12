@@ -1,6 +1,5 @@
 package com.masterz.music
 
-import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -21,9 +20,10 @@ object OnlineCatalog {
     suspend fun search(term: String): List<OnlineTrack> = withContext(Dispatchers.IO) {
         val clean = term.trim()
         if (clean.isEmpty()) return@withContext emptyList()
-        val encodedTerm = URLEncoder.encode(clean, "UTF-8")
-        val query = "mediatype:audio AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*) AND (title:$encodedTerm OR creator:$encodedTerm)"
-        val url = "$BASE/advancedsearch.php?q=$query&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=licenseurl&rows=30&page=1&output=json"
+        val safeTerm = clean.replace("\\", "\\\\").replace("\"", "\\\"")
+        val rawQuery = "mediatype:audio AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*) AND (title:\"$safeTerm\" OR creator:\"$safeTerm\")"
+        val encodedQuery = URLEncoder.encode(rawQuery, "UTF-8")
+        val url = "$BASE/advancedsearch.php?q=$encodedQuery&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=licenseurl&rows=30&page=1&output=json"
         val json = JSONObject(readUrl(url))
         val docs = json.getJSONObject("response").getJSONArray("docs")
         buildList {
