@@ -425,6 +425,7 @@ private fun SearchContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerContent(
     player: ExoPlayer, title: String, artist: String, isPlaying: Boolean, mode: String,
