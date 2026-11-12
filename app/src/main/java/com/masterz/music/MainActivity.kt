@@ -276,12 +276,11 @@ private fun HomeContent(
                 GenreTile("Energy", "03", Color(0xFF5D9E91), Modifier.weight(1f))
             }
             Spacer(Modifier.height(12.dp))
-            Text("Kategori ini adalah tampilan awal. Katalog streaming legal akan dihubungkan pada tahap berikutnya.", color = muted, fontSize = 11.sp)
+            Text("Cari audio legal di tab Search, atau tambahkan koleksi MP3 dari perangkat.", color = muted, fontSize = 11.sp)
         }
     }
 }
 
-@Composable
 @Composable
 private fun OnlineTrackRow(
     track: OnlineTrack, text: Color, muted: Color, surface: Color, onClick: () -> Unit
@@ -306,6 +305,7 @@ private fun OnlineTrackRow(
     }
 }
 
+@Composable
 private fun GenreTile(title: String, number: String, color: Color, modifier: Modifier = Modifier) {
     Column(modifier.clip(RoundedCornerShape(18.dp)).background(color.copy(alpha = .16f)).padding(12.dp)) {
         Text(number, color = color, fontSize = 10.sp, fontWeight = FontWeight.Bold)
