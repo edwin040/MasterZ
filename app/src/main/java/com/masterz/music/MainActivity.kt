@@ -508,7 +508,7 @@ private fun PlayerContent(
 @Composable
 private fun VisualizerPanel(isPlaying: Boolean) {
     val transition = rememberInfiniteTransition(label = "audio-visualizer")
-    Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(26.dp)).background(
+    Box(Modifier.fillMaxWidth().height(340.dp).clip(RoundedCornerShape(26.dp)).background(
         androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0xFF393451), Color(0xFF775D83), Color(0xFFE8795B)))
     ), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
