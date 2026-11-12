@@ -21,9 +21,9 @@ object OnlineCatalog {
         val clean = term.trim()
         if (clean.isEmpty()) return@withContext emptyList()
         val safeTerm = clean.replace("\\", "\\\\").replace("\"", "\\\"")
-        val rawQuery = "mediatype:audio AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*) AND (title:\"$safeTerm\" OR creator:\"$safeTerm\")"
+        val rawQuery = "mediatype:audio AND (licenseurl:*creativecommons.org* OR licenseurl:*publicdomain*) AND (title:\"$safeTerm\" OR contributor:\"$safeTerm\" OR subject:\"$safeTerm\")"
         val encodedQuery = URLEncoder.encode(rawQuery, "UTF-8")
-        val url = "$BASE/advancedsearch.php?q=$encodedQuery&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=licenseurl&rows=30&page=1&output=json"
+        val url = "$BASE/advancedsearch.php?q=$encodedQuery&fl[]=identifier&fl[]=title&fl[]=contributor&fl[]=licenseurl&rows=30&page=1&output=json"
         val json = JSONObject(readUrl(url))
         val docs = json.getJSONObject("response").getJSONArray("docs")
         buildList {
@@ -36,7 +36,7 @@ object OnlineCatalog {
                         OnlineTrack(
                             identifier = id,
                             title = doc.optString("title").ifBlank { id },
-                            artist = doc.optString("creator").ifBlank { "Arsip Internet" },
+                            artist = doc.optString("contributor").ifBlank { "Arsip Internet" },
                             license = license
                         )
                     )
