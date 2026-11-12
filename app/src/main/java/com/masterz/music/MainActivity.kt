@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val Ink = Color(0xFF24263A)
 private val Paper = Color(0xFFF5F1EA)
@@ -62,6 +62,10 @@ private fun MasterZApp(darkMode: Boolean, onThemeChange: (Boolean) -> Unit) {
     var isPlaying by remember { mutableStateOf(false) }
     var activeTab by remember { mutableStateOf("Home") }
     var query by remember { mutableStateOf("") }
+    var onlineTracks by remember { mutableStateOf<List<OnlineTrack>>(emptyList()) }
+    var searching by remember { mutableStateOf(false) }
+    var onlineError by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     DisposableEffect(player) { onDispose { player.release() } }
 
@@ -133,14 +137,64 @@ private fun MasterZApp(darkMode: Boolean, onThemeChange: (Boolean) -> Unit) {
                             isPlaying = player.isPlaying
                         } else audioPicker.launch(arrayOf("audio/*"))
                     })
-                    "Search" -> Column(Modifier.fillMaxSize().padding(22.dp)) {
-                        Text("Temukan musik", color = text, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(16.dp))
-                        OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Cari lagu di perangkat...") }, leadingIcon = { Icon(Icons.Default.Search, null) }, shape = RoundedCornerShape(18.dp), singleLine = true)
-                        Spacer(Modifier.height(14.dp))
-                        Text("Untuk koleksi streaming, katalog legal akan ditambahkan pada tahap berikutnya.", color = muted)
+                    "Search" -> Column(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+                        Text("Musik online", color = text, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                        Text("Cari audio berlisensi Creative Commons / domain publik", color = muted, fontSize = 12.sp)
                         Spacer(Modifier.height(12.dp))
-                        Button(onClick = { audioPicker.launch(arrayOf("audio/*")) }, colors = ButtonDefaults.buttonColors(containerColor = Coral)) { Icon(Icons.Default.FolderOpen, null); Spacer(Modifier.width(8.dp)); Text("Pilih file audio") }
+                        OutlinedTextField(
+                            value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Cari judul atau artis...") },
+                            leadingIcon = { Icon(Icons.Default.Search, null) },
+                            shape = RoundedCornerShape(18.dp), singleLine = true
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                enabled = query.isNotBlank() && !searching,
+                                onClick = {
+                                    scope.launch {
+                                        searching = true
+                                        onlineError = null
+                                        try { onlineTracks = OnlineCatalog.search(query) }
+                                        catch (e: Exception) { onlineError = e.message ?: "Gagal memuat katalog" }
+                                        finally { searching = false }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Coral)
+                            ) {
+                                Icon(Icons.Default.Search, null); Spacer(Modifier.width(6.dp)); Text("Cari online")
+                            }
+                            OutlinedButton(onClick = { audioPicker.launch(arrayOf("audio/*")) }) {
+                                Icon(Icons.Default.FolderOpen, null); Spacer(Modifier.width(6.dp)); Text("File HP")
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        if (searching) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Coral)
+                        onlineError?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
+                        if (!searching && onlineTracks.isEmpty() && onlineError == null) {
+                            Text("Hasil musik legal akan muncul di sini. Koneksi internet diperlukan.", color = muted, fontSize = 12.sp)
+                        }
+                        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
+                            items(onlineTracks.size) { index ->
+                                val track = onlineTracks[index]
+                                OnlineTrackRow(track, text, muted, surface, onClick = {
+                                    scope.launch {
+                                        onlineError = null
+                                        try {
+                                            val stream = OnlineCatalog.streamUrl(track)
+                                            player.setMediaItem(MediaItem.fromUri(stream))
+                                            player.prepare()
+                                            player.play()
+                                            pickedName = track.title
+                                            pickedUri = null
+                                            isPlaying = true
+                                        } catch (e: Exception) {
+                                            onlineError = e.message ?: "Audio tidak dapat diputar"
+                                        }
+                                    }
+                                })
+                            }
+                        }
                     }
                     "Library" -> Column(Modifier.fillMaxSize().padding(22.dp)) {
                         Text("Koleksi kamu", color = text, fontSize = 25.sp, fontWeight = FontWeight.Bold)
@@ -228,6 +282,30 @@ private fun HomeContent(
 }
 
 @Composable
+@Composable
+private fun OnlineTrackRow(
+    track: OnlineTrack, text: Color, muted: Color, surface: Color, onClick: () -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(surface)
+            .clickable(onClick = onClick).padding(13.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier.size(46.dp).clip(RoundedCornerShape(13.dp))
+                .background(Lavender.copy(alpha = .18f)),
+            contentAlignment = Alignment.Center
+        ) { Icon(Icons.Default.Cloud, null, tint = Lavender) }
+        Spacer(Modifier.width(11.dp))
+        Column(Modifier.weight(1f)) {
+            Text(track.title, color = text, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(track.artist, color = muted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("Creative Commons / domain publik", color = muted, fontSize = 9.sp)
+        }
+        Icon(Icons.Default.PlayCircle, null, tint = Coral, modifier = Modifier.size(30.dp))
+    }
+}
+
 private fun GenreTile(title: String, number: String, color: Color, modifier: Modifier = Modifier) {
     Column(modifier.clip(RoundedCornerShape(18.dp)).background(color.copy(alpha = .16f)).padding(12.dp)) {
         Text(number, color = color, fontSize = 10.sp, fontWeight = FontWeight.Bold)
