@@ -16,7 +16,9 @@ data class OnlineTrack(
     val artist: String,
     val license: String,
     val downloads: Long = 0L,
-    val source: String = "Internet Archive"
+    val source: String = "Internet Archive",
+    val tags: String = "",
+    val genre: String = ""
 )
 
 object OnlineCatalog {
@@ -73,7 +75,11 @@ object OnlineCatalog {
 
         // Fallback: only open-licensed Indonesian-tagged archive items, never global tracks mislabeled as local.
         try {
-            searchArchive("Indonesia OR Indonesian OR dangdut OR koplo OR gamelan").take(20)
+            coroutineScope {
+                indonesiaTerms.take(8).map { term ->
+                    async { try { searchArchive(term) } catch (_: Exception) { emptyList() } }
+                }.awaitAll().flatten().distinctBy { it.identifier }.sortedByDescending { it.downloads }.take(20)
+            }
         } catch (_: Exception) {
             emptyList()
         }
@@ -109,7 +115,9 @@ object OnlineCatalog {
                         artist = artist,
                         license = "Track publik Audius • cek ketentuan kreator",
                         downloads = item.optLong("play_count", 0L),
-                        source = "Audius"
+                        source = "Audius",
+                        tags = tags,
+                        genre = item.optString("genre")
                     )
                 )
             }
@@ -117,10 +125,10 @@ object OnlineCatalog {
     }
 
     private fun isIndonesianTrack(track: OnlineTrack): Boolean {
-        val text = "${track.title} ${track.artist}".lowercase()
+        val text = "${track.title} ${track.artist} ${track.tags} ${track.genre}".lowercase()
         return indonesiaTerms.any { text.contains(it) } ||
             listOf("indonesia", "indonesian", "dangdut", "koplo", "campursari", "gamelan", "jawa", "sunda")
-                .any { track.license.contains(it, true) }
+                .any { text.contains(it) }
     }
 
     private suspend fun searchArchive(term: String): List<OnlineTrack> = withContext(Dispatchers.IO) {
