@@ -132,7 +132,7 @@ private fun MasterZApp(darkMode: Boolean, onThemeChange: (Boolean) -> Unit) {
 
                 when (activeTab) {
                     "Home" -> HomeContent(text, muted, surface, pickedName, isPlaying, onPick = { audioPicker.launch(arrayOf("audio/*")) }, onPlay = {
-                        if (pickedUri != null) {
+                        if (player.currentMediaItem != null) {
                             if (player.isPlaying) player.pause() else player.play()
                             isPlaying = player.isPlaying
                         } else audioPicker.launch(arrayOf("audio/*"))
