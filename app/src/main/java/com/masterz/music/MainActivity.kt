@@ -365,7 +365,7 @@ private fun HomeContent(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Sedang populer", color = text, fontSize = 19.sp, fontWeight = FontWeight.Bold)
-                    Text("Audio legal yang banyak diakses di Internet Archive", color = muted, fontSize = 10.sp)
+                    Text("Musik Indonesia yang sedang ramai di Audius • arsip terbuka sebagai cadangan", color = muted, fontSize = 10.sp)
                 }
                 IconButton(onClick = onRefreshTrending, enabled = !loading) { Icon(Icons.Default.Refresh, null, tint = Coral) }
             }
@@ -394,7 +394,7 @@ private fun SearchContent(
 ) {
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
         Text("Musik online", color = text, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-        Text("Cari audio berlisensi Creative Commons / domain publik", color = muted, fontSize = 12.sp)
+        Text("Cari musik Indonesia dari Audius dan arsip audio berlisensi terbuka", color = muted, fontSize = 12.sp)
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
             value = query, onValueChange = onQuery, modifier = Modifier.fillMaxWidth(),
@@ -548,7 +548,7 @@ private fun OnlineTrackRow(
         Column(Modifier.weight(1f)) {
             Text(track.title, color = text, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(track.artist, color = muted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(if (showDownloads) "♫ ${track.downloads} akses • Lisensi terbuka" else "Creative Commons / domain publik", color = muted, fontSize = 9.sp)
+            Text(if (track.source == "Audius") "♫ ${track.downloads} pemutaran • Audius" else "Internet Archive • ${track.license.substringAfterLast("/").ifBlank { "Lisensi terbuka" }}", color = muted, fontSize = 9.sp)
         }
         Icon(Icons.Default.PlayCircle, null, tint = Coral, modifier = Modifier.size(30.dp))
     }
