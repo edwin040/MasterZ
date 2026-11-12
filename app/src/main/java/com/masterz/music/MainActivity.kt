@@ -183,8 +183,7 @@ private fun HomeContent(
                 Column(Modifier.weight(1f)) {
                     Text("MUSIC, WITHOUT LIMITS", color = Color.White.copy(alpha = .8f), fontSize = 9.sp, letterSpacing = 1.3.sp)
                     Spacer(Modifier.height(8.dp))
-                    Text("Dengarkan
-caramu.", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 28.sp)
+                    Text("Dengarkan\ncaramu.", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 28.sp)
                     Spacer(Modifier.height(14.dp))
                     Button(onClick = onPick, colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Ink), shape = RoundedCornerShape(14.dp)) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.width(5.dp)); Text("Tambah musik")
